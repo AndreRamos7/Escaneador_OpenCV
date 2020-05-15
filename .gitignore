@@ -1,0 +1,5 @@
+/build
+/libs/
+/app/androidTest
+/app/test
+/app/main/jniLibs

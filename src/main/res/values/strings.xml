@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Escaneador</string>
+    <string name="button">Play</string>
+    <string name="img_btn_play">play.png</string>
+</resources>
