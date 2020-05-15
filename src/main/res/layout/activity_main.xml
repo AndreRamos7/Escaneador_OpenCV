@@ -8,27 +8,75 @@
     android:gravity="center"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="25dp"
-        android:text="@string/button" />
-
-    <ImageView
-        android:id="@+id/image_play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:contentDescription="@string/img_btn_play"
-        app:srcCompat="@drawable/play" />
-
     <org.opencv.android.JavaCameraView
         android:id="@+id/CameraView"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:visibility="visible" />
 
+    <LinearLayout
+        android:id="@+id/controles"
+        android:layout_width="match_parent"
+        android:layout_height="674dp"
+        android:orientation="vertical">
+
+        <SeekBar
+            android:id="@+id/min_seek_h"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:max="180"
+            android:progress="3" />
+
+        <SeekBar
+            android:id="@+id/min_seek_s"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:max="255"
+            android:progress="3" />
+
+        <SeekBar
+            android:id="@+id/min_seek_v"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:max="255"
+            android:progress="3" />
+
+        <SeekBar
+            android:id="@+id/max_seek_h"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:max="180"
+            android:progress="3" />
+
+        <SeekBar
+            android:id="@+id/max_seek_s"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:max="255"
+            android:progress="3" />
+
+        <SeekBar
+            android:id="@+id/max_seek_v"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:max="255"
+            android:progress="3" />
+
+    </LinearLayout>
+
+<!--    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="25dp"
+        android:text="@string/button" />
+        -->
 
 </FrameLayout>

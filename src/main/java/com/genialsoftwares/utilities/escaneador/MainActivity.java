@@ -9,6 +9,7 @@ import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -32,12 +33,28 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     CameraBridgeViewBase cameraBridgeViewBase;
     BaseLoaderCallback baseLoaderCallback;
     int counter = 0;
+    SeekBar min_seek_h = null; // initiate the Seek bar
+    SeekBar min_seek_s = null; // initiate the Seek bar
+    SeekBar min_seek_v = null; // initiate the Seek bar
+
+    SeekBar max_seek_h = null; // initiate the Seek bar
+    SeekBar max_seek_s = null; // initiate the Seek bar
+    SeekBar max_seek_v = null; // initiate the Seek bar
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Button btn_play = (Button) findViewById(R.id.button);
+        //Button btn_play = (Button) findViewById(R.id.button);
+        max_seek_h = (SeekBar) findViewById(R.id.max_seek_h);
+        max_seek_s = (SeekBar) findViewById(R.id.max_seek_s);
+        max_seek_v = (SeekBar) findViewById(R.id.max_seek_v);
+
+        min_seek_h = (SeekBar) findViewById(R.id.min_seek_h);
+        min_seek_s = (SeekBar) findViewById(R.id.min_seek_s);
+        min_seek_v = (SeekBar) findViewById(R.id.min_seek_v);
 
         cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.CameraView);
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
@@ -58,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             }
         };
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        btn_play.setOnClickListener(this);
+        //btn_play.setOnClickListener(this);
     }
     @Override
     public void onClick(View v) {
@@ -91,6 +108,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        int min_seek_h_value = min_seek_h.getProgress();
+        int min_seek_s_value = min_seek_s.getProgress();
+        int min_seek_v_value = min_seek_v.getProgress();
+
+        int max_seek_h_value = max_seek_h.getProgress();
+        int max_seek_s_value = max_seek_s.getProgress();
+        int max_seek_v_value = max_seek_v.getProgress();
 
         Mat frame =  inputFrame.rgba();
         Mat frameOriginal =  frame.clone();
@@ -99,8 +123,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         MatOfPoint retangulo = new MatOfPoint();
         Size sz = new Size(5, 5);
-        Scalar lower = new Scalar(0, 0, 0);
-        Scalar upper = new Scalar(52, 100, 183);
+        Scalar lower = new Scalar(min_seek_h_value, min_seek_s_value, min_seek_v_value);
+        Scalar upper = new Scalar(max_seek_h_value, max_seek_s_value, max_seek_v_value);
 
         Imgproc.GaussianBlur(frame, frame, sz, 1);
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
