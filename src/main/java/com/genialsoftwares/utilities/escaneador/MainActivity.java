@@ -3,6 +3,7 @@ package com.genialsoftwares.utilities.escaneador;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -16,6 +17,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -108,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        //Bitmap myBitmap = null;
         int min_seek_h_value = min_seek_h.getProgress();
         int min_seek_s_value = min_seek_s.getProgress();
         int min_seek_v_value = min_seek_v.getProgress();
@@ -115,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         int max_seek_h_value = max_seek_h.getProgress();
         int max_seek_s_value = max_seek_s.getProgress();
         int max_seek_v_value = max_seek_v.getProgress();
+
 
         Mat frame =  inputFrame.rgba();
         Mat frameOriginal =  frame.clone();
@@ -130,11 +134,12 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
         Core.inRange(frame, lower, upper, frame);
         Imgproc.findContours(frame, contours, hrq, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        //Utils.matToBitmap (frame, myBitmap);
 
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             Rect rect = Imgproc.boundingRect(contours.get(contourIdx));
             double area_contours = Imgproc.contourArea(contours.get(contourIdx));
-            if(10 < area_contours && area_contours < 50){
+            if(10 < area_contours && area_contours < 70){
                 int h = (int) contours.get(contourIdx).size().height;
                 int w = (int) contours.get(contourIdx).size().width;
                 Point center = new Point(rect.x, rect.y);
