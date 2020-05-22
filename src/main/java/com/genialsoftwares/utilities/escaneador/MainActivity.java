@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
+import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -32,11 +34,15 @@ import org.opencv.videoio.VideoCapture;
 
 import android.view.WindowManager;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnClickListener {
-    CameraBridgeViewBase cameraBridgeViewBase;
+public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnTouchListener, View.OnClickListener {
+    //CameraBridgeViewBase cameraBridgeViewBase;
+    private Captura mOpenCvCameraView;
+
     BaseLoaderCallback baseLoaderCallback;
     int counter = 0;
     SeekBar min_seek_h = null; // initiate the Seek bar
@@ -48,6 +54,23 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     SeekBar max_seek_v = null; // initiate the Seek bar
     private final String TAG = "TSTES";
 
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    Log.i(TAG, "OpenCV loaded successfully");
+                    mOpenCvCameraView.enableView();
+                    mOpenCvCameraView.setOnTouchListener(MainActivity.this);
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,24 +87,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         min_seek_s = (SeekBar) findViewById(R.id.min_seek_s);
         min_seek_v = (SeekBar) findViewById(R.id.min_seek_v);
 
-        cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.CameraView);
-        cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
-        cameraBridgeViewBase.setCvCameraViewListener(this);
+        mOpenCvCameraView = (Captura) findViewById(R.id.CameraView);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+        mOpenCvCameraView.setCvCameraViewListener(this);
         //cameraBridgeViewBase.setCameraIndex(1);
-        baseLoaderCallback = new BaseLoaderCallback(this) {
-            @Override
-            public void onManagerConnected(int status) {
-                super.onManagerConnected(status);
-                switch (status){
-                    case BaseLoaderCallback.SUCCESS:
-                        cameraBridgeViewBase.enableView();
-                        break;
-                    default:
-                        super.onManagerConnected(status);
-                        break;
-                }
-            }
-        };
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //btn_play.setOnClickListener(this);
 
@@ -94,18 +104,20 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     protected void onPause(){
         super.onPause();
-        if(cameraBridgeViewBase != null){
-            cameraBridgeViewBase.disableView();
+        if(mOpenCvCameraView != null){
+            mOpenCvCameraView.disableView();
         }
     }
 
     @Override
-    protected void onResume(){
+    public void onResume(){
         super.onResume();
-        if(!OpenCVLoader.initDebug()){
-            Toast.makeText(getApplicationContext(), "There's a problem, yo!", Toast.LENGTH_SHORT);
-        }else{
-            baseLoaderCallback.onManagerConnected(baseLoaderCallback.SUCCESS);
+        if (!OpenCVLoader.initDebug()) {
+            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+        } else {
+            Log.d(TAG, "OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
     }
 
@@ -157,12 +169,12 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             Rect rect = Imgproc.boundingRect(contours.get(contourIdx));
             double area_contours = Imgproc.contourArea(contours.get(contourIdx));
-            if(a_frame_crop/4 < area_contours && area_contours < a_frame_crop/3){
+            if(a_frame_crop/12 < area_contours && area_contours < a_frame_crop/4){
                 int h = (int) contours.get(contourIdx).size().height;
                 int w = (int) contours.get(contourIdx).size().width;
                 Point pt1 = new Point(rect.x, rect.y);
                 Point pt2 = new Point(rect.x + rect.width, rect.y + rect.height);
-                Imgproc.rectangle(frameOriginal, pt1, pt2, new Scalar(0, 255, 255), 3);
+                Imgproc.rectangle(frameOriginal, pt1, pt2, new Scalar(255, 255, 0), 3);
             }
         }
         return frameOriginal;
@@ -171,8 +183,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(cameraBridgeViewBase != null){
-            cameraBridgeViewBase.disableView();
+        if(mOpenCvCameraView != null){
+            mOpenCvCameraView.disableView();
         }
     }
 
@@ -214,4 +226,15 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     }
 
 
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        Log.i(TAG,"onTouch event");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+        String currentDateandTime = sdf.format(new Date());
+        String fileName = Environment.getExternalStorageDirectory().getPath() +
+                "/sample_picture_" + currentDateandTime + ".jpg";
+        mOpenCvCameraView.takePicture(fileName);
+        Toast.makeText(this, fileName + " saved", Toast.LENGTH_SHORT).show();
+        return false;
+    }
 }
