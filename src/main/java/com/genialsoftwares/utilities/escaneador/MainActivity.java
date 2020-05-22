@@ -2,12 +2,10 @@ package com.genialsoftwares.utilities.escaneador;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.Surface;
+import android.os.Environment;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
@@ -20,7 +18,6 @@ import org.opencv.android.JavaCameraView;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -28,33 +25,37 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
 
 import android.view.WindowManager;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnClickListener {
-    CameraBridgeViewBase cameraBridgeViewBase;
-    BaseLoaderCallback baseLoaderCallback;
-    int counter = 0;
-    SeekBar min_seek_h = null; // initiate the Seek bar
-    SeekBar min_seek_s = null; // initiate the Seek bar
-    SeekBar min_seek_v = null; // initiate the Seek bar
+    private CameraBridgeViewBase cameraBridgeViewBase;
+    private BaseLoaderCallback baseLoaderCallback;
+    private int counter = 0;
+    private SeekBar min_seek_h = null; // initiate the Seek bar
+    private SeekBar min_seek_s = null; // initiate the Seek bar
+    private SeekBar min_seek_v = null; // initiate the Seek bar
 
-    SeekBar max_seek_h = null; // initiate the Seek bar
-    SeekBar max_seek_s = null; // initiate the Seek bar
-    SeekBar max_seek_v = null; // initiate the Seek bar
-    private final String TAG = "TSTES";
+    private SeekBar max_seek_h = null; // initiate the Seek bar
+    private SeekBar max_seek_s = null; // initiate the Seek bar
+    private SeekBar max_seek_v = null; // initiate the Seek bar
+    private final String TAG = "Genial";
+    private Mat foto  = null;
+    private Rect rect_foto = new Rect();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Button btn_play = (Button) findViewById(R.id.button);
-
+        Button btn_play = (Button) findViewById(R.id.button);
 
         max_seek_h = (SeekBar) findViewById(R.id.max_seek_h);
         max_seek_s = (SeekBar) findViewById(R.id.max_seek_s);
@@ -83,12 +84,18 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             }
         };
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        //btn_play.setOnClickListener(this);
+        btn_play.setOnClickListener(this);
+        btn_play.animate().rotation(btn_play.getRotation() - 90).start();
+
 
     }
     @Override
     public void onClick(View v) {
-        Toast.makeText(getApplicationContext(), "Clikado!", Toast.LENGTH_LONG);
+        Toast.makeText(this.getApplicationContext(), "Salvo nos arquivos!", Toast.LENGTH_LONG).show();
+        Bitmap analyzed = Bitmap.createBitmap(foto.cols(), foto.rows(), Bitmap.Config.RGB_565);
+        Utils.matToBitmap(foto, analyzed);
+        Bitmap cortado = cortarBitmap(rect_foto.x, rect_foto.y, rect_foto.width, rect_foto.height, analyzed);
+        saveImage(cortado);
     }
 
     @Override
@@ -115,9 +122,42 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     public void onCameraViewStopped() {}
 
+
+    private void saveImage(Bitmap finalBitmap) {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/genial_images");
+
+        if (!myDir.exists()){
+            myDir.mkdir();
+            // If you require it to make the entire directory path including parents,
+            // use directory.mkdirs(); here instead.
+        }
+
+        String  timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String fname = timeStamp +".jpg";
+
+        File file = new File(myDir, fname);
+        if (file.exists()) file.delete ();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Bitmap cortarBitmap(int startX, int startY, int width, int height, Bitmap bmp) {
+        Bitmap source = bmp;
+        Bitmap resized = Bitmap.createBitmap(source, startX, startY, width, height);
+        return resized;
+    }
+
+
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        //Bitmap myBitmap = null;
         int min_seek_h_value = min_seek_h.getProgress();
         int min_seek_s_value = min_seek_s.getProgress();
         int min_seek_v_value = min_seek_v.getProgress();
@@ -159,14 +199,16 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             Rect rect = Imgproc.boundingRect(contours.get(contourIdx));
             double area_contours = Imgproc.contourArea(contours.get(contourIdx));
-            if(a_frame_crop/13 < area_contours && area_contours < a_frame_crop/4){
+            if(a_frame_crop/13 < area_contours && area_contours < a_frame_crop/3){
                 int h = (int) contours.get(contourIdx).size().height;
                 int w = (int) contours.get(contourIdx).size().width;
                 Point pt1 = new Point(rect.x, rect.y);
                 Point pt2 = new Point(rect.x + rect.width, rect.y + rect.height);
                 Imgproc.rectangle(frame, pt1, pt2, new Scalar(0, 0, 255), 3);
+                rect_foto = rect;
             }
         }
+        foto = frame;
         //frame.release();
         frame_blur.release();
         frame_hsv.release();
