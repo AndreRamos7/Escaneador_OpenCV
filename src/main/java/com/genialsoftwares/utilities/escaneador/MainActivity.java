@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -19,6 +20,7 @@ import org.opencv.android.JavaCameraView;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -26,6 +28,8 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
+
 import android.view.WindowManager;
 
 import java.util.ArrayList;
@@ -42,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     SeekBar max_seek_h = null; // initiate the Seek bar
     SeekBar max_seek_s = null; // initiate the Seek bar
     SeekBar max_seek_v = null; // initiate the Seek bar
-
+    private final String TAG = "TSTES";
 
 
     @Override
@@ -50,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //Button btn_play = (Button) findViewById(R.id.button);
+
+
         max_seek_h = (SeekBar) findViewById(R.id.max_seek_h);
         max_seek_s = (SeekBar) findViewById(R.id.max_seek_s);
         max_seek_v = (SeekBar) findViewById(R.id.max_seek_v);
@@ -78,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         };
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //btn_play.setOnClickListener(this);
+
     }
     @Override
     public void onClick(View v) {
@@ -119,53 +126,45 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         int max_seek_s_value = max_seek_s.getProgress();
         int max_seek_v_value = max_seek_v.getProgress();
 
+        Scalar lower = new Scalar(min_seek_h_value, min_seek_s_value, min_seek_v_value);
+        Scalar upper = new Scalar(max_seek_h_value, max_seek_s_value, max_seek_v_value);
 
-        Mat frame =  inputFrame.rgba();
-        Mat frameOriginal =  frame.clone();
         Mat hrq =  new Mat();
         Point ponto = new Point();
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         MatOfPoint retangulo = new MatOfPoint();
-        Size sz = new Size(5, 5);
-        Scalar lower = new Scalar(min_seek_h_value, min_seek_s_value, min_seek_v_value);
-        Scalar upper = new Scalar(max_seek_h_value, max_seek_s_value, max_seek_v_value);
+        Size sz = new Size(15, 15);
 
-        Imgproc.GaussianBlur(frame, frame, sz, 1);
+        Mat frame =  inputFrame.rgba();
+        Mat frameOriginal =  frame.clone();
+        Mat mascara =  new Mat();
+        //Core.flip(frame, frame, 1);
+        int h_frame = (int) frame.size().height;
+        int w_frame = (int) frame.size().width;
+        int a_frame_crop = (h_frame * w_frame);
+
+
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
+        Imgproc.blur(frame, frame, sz, new Point(2,2));
         Core.inRange(frame, lower, upper, frame);
-        Imgproc.findContours(frame, contours, hrq, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        Core.bitwise_not(frame, frame);
+        Core.bitwise_and(frame, frame, mascara);
+
+        Imgproc.findContours(frame, contours, hrq, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         //Utils.matToBitmap (frame, myBitmap);
 
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             Rect rect = Imgproc.boundingRect(contours.get(contourIdx));
             double area_contours = Imgproc.contourArea(contours.get(contourIdx));
-            if(10 < area_contours && area_contours < 70){
+            if(a_frame_crop/4 < area_contours && area_contours < a_frame_crop/3){
                 int h = (int) contours.get(contourIdx).size().height;
                 int w = (int) contours.get(contourIdx).size().width;
-                Point center = new Point(rect.x, rect.y);
-                Imgproc.circle(frameOriginal, center, h, new Scalar(0, 255, 2), 3);
+                Point pt1 = new Point(rect.x, rect.y);
+                Point pt2 = new Point(rect.x + rect.width, rect.y + rect.height);
+                Imgproc.rectangle(frameOriginal, pt1, pt2, new Scalar(0, 255, 255), 3);
             }
-
-
-
-            //Imgproc.drawContours(frame, contours, contourIdx, new Scalar(0, 0, 255), -1);
         }
-        /*for (List contour: contours) {
-
-            //Imgproc.circle(frame, (x, y), int(h), (2, 255, 0), 2)
-            Imgproc.drawContours(frame, contours, contourIdx, new Scalar(0, 0, 255), -1);
-        }*/
-        /*if(counter % 2 == 0){
-            Core.flip(frame, frame, 1);
-            Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2GRAY);
-        }*/
-        //Core.flip(frame, frame, 0);
-        //Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2GRAY);
-        //Imgproc.blur(frame, frame, sz);
-        //Imgproc.Canny(frame, frame, 80, 100);
-        //Imgproc.findContours();
-
-
         return frameOriginal;
     }
 
