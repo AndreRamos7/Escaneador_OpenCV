@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -18,7 +17,6 @@ import android.widget.Toast;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
-import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -34,15 +32,11 @@ import org.opencv.videoio.VideoCapture;
 
 import android.view.WindowManager;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnTouchListener, View.OnClickListener {
-    //CameraBridgeViewBase cameraBridgeViewBase;
-    private Captura mOpenCvCameraView;
-
+public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnClickListener {
+    CameraBridgeViewBase cameraBridgeViewBase;
     BaseLoaderCallback baseLoaderCallback;
     int counter = 0;
     SeekBar min_seek_h = null; // initiate the Seek bar
@@ -54,23 +48,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     SeekBar max_seek_v = null; // initiate the Seek bar
     private final String TAG = "TSTES";
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
-                    mOpenCvCameraView.setOnTouchListener(MainActivity.this);
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +64,24 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         min_seek_s = (SeekBar) findViewById(R.id.min_seek_s);
         min_seek_v = (SeekBar) findViewById(R.id.min_seek_v);
 
-        mOpenCvCameraView = (Captura) findViewById(R.id.CameraView);
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
+        cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.CameraView);
+        cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
+        cameraBridgeViewBase.setCvCameraViewListener(this);
         //cameraBridgeViewBase.setCameraIndex(1);
-
+        baseLoaderCallback = new BaseLoaderCallback(this) {
+            @Override
+            public void onManagerConnected(int status) {
+                super.onManagerConnected(status);
+                switch (status){
+                    case BaseLoaderCallback.SUCCESS:
+                        cameraBridgeViewBase.enableView();
+                        break;
+                    default:
+                        super.onManagerConnected(status);
+                        break;
+                }
+            }
+        };
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //btn_play.setOnClickListener(this);
 
@@ -104,20 +94,18 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     protected void onPause(){
         super.onPause();
-        if(mOpenCvCameraView != null){
-            mOpenCvCameraView.disableView();
+        if(cameraBridgeViewBase != null){
+            cameraBridgeViewBase.disableView();
         }
     }
 
     @Override
-    public void onResume(){
+    protected void onResume(){
         super.onResume();
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
-        } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        if(!OpenCVLoader.initDebug()){
+            Toast.makeText(getApplicationContext(), "There's a problem, yo!", Toast.LENGTH_SHORT);
+        }else{
+            baseLoaderCallback.onManagerConnected(baseLoaderCallback.SUCCESS);
         }
     }
 
@@ -148,43 +136,52 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Size sz = new Size(15, 15);
 
         Mat frame =  inputFrame.rgba();
-        Mat frameOriginal =  frame.clone();
+        Mat frame_hsv =  new Mat();
+        Mat frame_blur =  new Mat();
         Mat mascara =  new Mat();
+        Mat mascara_inv =  new Mat();
+        Mat mascara_inv_com_img =  new Mat();
         //Core.flip(frame, frame, 1);
         int h_frame = (int) frame.size().height;
         int w_frame = (int) frame.size().width;
         int a_frame_crop = (h_frame * w_frame);
 
+        Imgproc.cvtColor(frame, frame_hsv, Imgproc.COLOR_RGB2HSV);
+        Imgproc.blur(frame_hsv, frame_blur, sz, new Point(2,2));
+        Core.inRange(frame_blur, lower, upper, mascara);
 
-        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
-        Imgproc.blur(frame, frame, sz, new Point(2,2));
-        Core.inRange(frame, lower, upper, frame);
+        Core.bitwise_not(mascara, mascara_inv);
+        Core.bitwise_and(frame, frame, mascara_inv_com_img);
 
-        Core.bitwise_not(frame, frame);
-        Core.bitwise_and(frame, frame, mascara);
-
-        Imgproc.findContours(frame, contours, hrq, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mascara_inv, contours, hrq, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         //Utils.matToBitmap (frame, myBitmap);
 
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             Rect rect = Imgproc.boundingRect(contours.get(contourIdx));
             double area_contours = Imgproc.contourArea(contours.get(contourIdx));
-            if(a_frame_crop/12 < area_contours && area_contours < a_frame_crop/4){
+            if(a_frame_crop/13 < area_contours && area_contours < a_frame_crop/4){
                 int h = (int) contours.get(contourIdx).size().height;
                 int w = (int) contours.get(contourIdx).size().width;
                 Point pt1 = new Point(rect.x, rect.y);
                 Point pt2 = new Point(rect.x + rect.width, rect.y + rect.height);
-                Imgproc.rectangle(frameOriginal, pt1, pt2, new Scalar(255, 255, 0), 3);
+                Imgproc.rectangle(frame, pt1, pt2, new Scalar(0, 0, 255), 3);
             }
         }
-        return frameOriginal;
+        //frame.release();
+        frame_blur.release();
+        frame_hsv.release();
+        mascara.release();
+        mascara_inv.release();
+        mascara_inv_com_img.release();
+
+        return frame;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mOpenCvCameraView != null){
-            mOpenCvCameraView.disableView();
+        if(cameraBridgeViewBase != null){
+            cameraBridgeViewBase.disableView();
         }
     }
 
@@ -226,15 +223,4 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     }
 
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        Log.i(TAG,"onTouch event");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-        String currentDateandTime = sdf.format(new Date());
-        String fileName = Environment.getExternalStorageDirectory().getPath() +
-                "/sample_picture_" + currentDateandTime + ".jpg";
-        mOpenCvCameraView.takePicture(fileName);
-        Toast.makeText(this, fileName + " saved", Toast.LENGTH_SHORT).show();
-        return false;
-    }
 }
