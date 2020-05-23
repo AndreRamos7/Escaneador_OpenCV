@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:gravity="center"
+    android:orientation="horizontal"
     tools:context=".MainActivity">
 
     <org.opencv.android.JavaCameraView
@@ -15,68 +15,93 @@
         android:visibility="visible" />
 
     <LinearLayout
-        android:id="@+id/controles"
+        android:id="@+id/painel_fundo"
         android:layout_width="match_parent"
-        android:layout_height="674dp"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-        <SeekBar
-            android:id="@+id/min_seek_h"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:max="180"
-            android:progress="3" />
+        <LinearLayout
+            android:id="@+id/controles"
+            android:layout_width="541dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-        <SeekBar
-            android:id="@+id/min_seek_s"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:max="255"
-            android:progress="3" />
+            <SeekBar
+                android:id="@+id/min_seek_h"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:max="180"
+                android:progress="0" />
 
-        <SeekBar
-            android:id="@+id/min_seek_v"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:max="255"
-            android:progress="3" />
+            <SeekBar
+                android:id="@+id/min_seek_s"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:max="255"
+                android:progress="0" />
 
-        <SeekBar
-            android:id="@+id/max_seek_h"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:max="180"
-            android:progress="3" />
+            <SeekBar
+                android:id="@+id/min_seek_v"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:max="255"
+                android:progress="0" />
 
-        <SeekBar
-            android:id="@+id/max_seek_s"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:max="255"
-            android:progress="3" />
+            <SeekBar
+                android:id="@+id/max_seek_h"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:max="180"
+                android:progress="0" />
 
-        <SeekBar
-            android:id="@+id/max_seek_v"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            <SeekBar
+                android:id="@+id/max_seek_s"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:max="255"
+                android:progress="0" />
+
+            <SeekBar
+                android:id="@+id/max_seek_v"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:max="255"
+                android:progress="0" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/painel_fundo2"
             android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:max="255"
-            android:progress="3" />
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:contentDescription="@string/app_name" />
+
+            <Button
+                android:id="@+id/button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@+id/imageView"
+                android:layout_alignBottom="@+id/imageView"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="-88dp"
+                android:background="@android:drawable/ic_menu_camera" />
+
+        </RelativeLayout>
 
     </LinearLayout>
-
-<!--    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="25dp"
-        android:text="@string/button" />
-        -->
 
 </FrameLayout>

@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private final String TAG = "Genial";
     private Mat foto  = null;
     private Rect rect_foto = new Rect();
+    private ImageView mImageView;
 
 
     @Override
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button btn_play = (Button) findViewById(R.id.button);
+        mImageView = (ImageView) findViewById(R.id.imageView);
 
         max_seek_h = (SeekBar) findViewById(R.id.max_seek_h);
         max_seek_s = (SeekBar) findViewById(R.id.max_seek_s);
@@ -69,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
         //cameraBridgeViewBase.setCameraIndex(1);
+
         baseLoaderCallback = new BaseLoaderCallback(this) {
             @Override
             public void onManagerConnected(int status) {
@@ -91,10 +95,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     }
     @Override
     public void onClick(View v) {
-        Toast.makeText(this.getApplicationContext(), "Salvo nos arquivos!", Toast.LENGTH_LONG).show();
         Bitmap analyzed = Bitmap.createBitmap(foto.cols(), foto.rows(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(foto, analyzed);
+        //SHOW IMAGE
         Bitmap cortado = cortarBitmap(rect_foto.x, rect_foto.y, rect_foto.width, rect_foto.height, analyzed);
+        mImageView.setImageBitmap(cortado);
         saveImage(cortado);
     }
 
@@ -139,11 +144,18 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         File file = new File(myDir, fname);
         if (file.exists()) file.delete ();
         try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            options.inDither = false;
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            Bitmap source = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+
             FileOutputStream out = new FileOutputStream(file);
             finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+            Toast.makeText(this.getApplicationContext(), "Salvo nos arquivos!", Toast.LENGTH_LONG).show();
             out.flush();
             out.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -194,7 +206,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Core.bitwise_and(frame, frame, mascara_inv_com_img);
 
         Imgproc.findContours(mascara_inv, contours, hrq, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-        //Utils.matToBitmap (frame, myBitmap);
 
         for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++) {
             Rect rect = Imgproc.boundingRect(contours.get(contourIdx));
@@ -208,6 +219,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 rect_foto = rect;
             }
         }
+        Imgproc.putText(frame, "Captured: " + frame.size(), new Point(frame.cols() / 3 * 2, frame.rows() * 0.1),
+                Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 0));
+
         foto = frame;
         //frame.release();
         frame_blur.release();
