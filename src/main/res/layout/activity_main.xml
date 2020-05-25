@@ -28,7 +28,7 @@
 
             <SeekBar
                 android:id="@+id/min_seek_h"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                style="@style/Widget.AppCompat.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:max="180"
@@ -36,7 +36,7 @@
 
             <SeekBar
                 android:id="@+id/min_seek_s"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                style="@style/Widget.AppCompat.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:max="255"
@@ -44,7 +44,7 @@
 
             <SeekBar
                 android:id="@+id/min_seek_v"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                style="@style/Widget.AppCompat.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:max="255"
@@ -52,7 +52,7 @@
 
             <SeekBar
                 android:id="@+id/max_seek_h"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                style="@style/Widget.AppCompat.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:max="180"
@@ -60,7 +60,7 @@
 
             <SeekBar
                 android:id="@+id/max_seek_s"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                style="@style/Widget.AppCompat.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:max="255"
@@ -68,7 +68,7 @@
 
             <SeekBar
                 android:id="@+id/max_seek_v"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                style="@style/Widget.AppCompat.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:max="255"

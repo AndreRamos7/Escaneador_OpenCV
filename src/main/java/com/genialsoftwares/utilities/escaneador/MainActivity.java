@@ -1,7 +1,11 @@
 package com.genialsoftwares.utilities.escaneador;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -51,12 +55,44 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private Mat foto  = null;
     private Rect rect_foto = new Rect();
     private ImageView mImageView;
+    private int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.READ_CONTACTS)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            Toast.makeText(this.getApplicationContext(), "Essa permissão já foi concedida!", Toast.LENGTH_LONG).show();;
+        }
+
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this.getApplicationContext(), "Sem permissão para acessar a câmera!", Toast.LENGTH_LONG).show();;
+        }
         Button btn_play = (Button) findViewById(R.id.button);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
@@ -161,6 +197,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         }
     }
 
+
+
+
     private Bitmap cortarBitmap(int startX, int startY, int width, int height, Bitmap bmp) {
         Bitmap source = bmp;
         Bitmap resized = Bitmap.createBitmap(source, startX, startY, width, height);
@@ -215,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 int w = (int) contours.get(contourIdx).size().width;
                 Point pt1 = new Point(rect.x, rect.y);
                 Point pt2 = new Point(rect.x + rect.width, rect.y + rect.height);
-                Imgproc.rectangle(frame, pt1, pt2, new Scalar(0, 0, 255), 3);
+                Imgproc.rectangle(frame, pt1, pt2, new Scalar(255, 255, 255), 3);
                 rect_foto = rect;
             }
         }
